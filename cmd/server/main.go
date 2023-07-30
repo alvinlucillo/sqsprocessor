@@ -2,9 +2,11 @@ package main
 
 import (
 	"os"
+	"os/signal"
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/alvinlucillo/sqs-processor/internal/server"
 	"github.com/alvinlucillo/sqs-processor/internal/types"
@@ -12,44 +14,37 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// var addr string = "0.0.0.0:50051"
-
 func main() {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
-	logger.Info().Caller().Msg("Server started")
-
-	// lis, err := net.Listen("tcp", addr)
-	// if err != nil {
-	// 	logger.Fatal().Msgf("Failed to listen on: %v\n", err)
-	// }
-
-	// logger.Info().Msgf("Listening on %s", addr)
-
-	// opts := []grpc.ServerOption{}
-	// s := grpc.NewServer(opts...)
+	logger.Info().Caller().Msg("Server starting")
 
 	env, err := getEnvironmentValues()
 	if err != nil {
-		logger.Fatal().Msgf("Failed to retrieve environment variables: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to retrieve environment variables")
+		return
 	}
 
 	logger.Debug().Msgf("Environment variables %v", env)
 
 	s, err := server.NewServer(logger, env)
 	if err != nil {
-		logger.Fatal().Msgf("Failed to create server: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to create server")
 	}
 
-	if err = s.Serve(); err != nil {
-		logger.Fatal().Msgf("Failed to serve: %v", err)
-	}
+	shutdownChan := make(chan os.Signal, 1)
+	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// pb.RegisterSQSServiceServer(s, server)
-	// if err = s.Serve(lis); err != nil {
-	// 	logger.Fatal().Msgf("Failed to serve: %v", err)
-	// }
+	go func() {
+		if err = s.Serve(); err != nil {
+			logger.Fatal().Err(err).Msg("Failed to start the server")
+		}
+	}()
 
+	<-shutdownChan
+	s.GracefulStop()
+
+	logger.Info().Msg("Server stopped")
 }
 
 func getEnvironmentValues() (types.Env, error) {

@@ -28,8 +28,8 @@ type SQSServer struct {
 	pb.SQSServiceServer
 	SQSService *sqs.SQSService
 	Logger     zerolog.Logger
-	grpcServer *grpc.Server
-	listener   net.Listener
+	GrpcServer *grpc.Server
+	Listener   net.Listener
 }
 
 func NewServer(logger zerolog.Logger, env types.Env) (Server, error) {
@@ -41,6 +41,7 @@ func NewServer(logger zerolog.Logger, env types.Env) (Server, error) {
 		QueueName: env.QueueName,
 		Profile:   env.Profile,
 		Region:    env.Region,
+		Logger:    logger,
 	}
 
 	sqsService, err := sqs.NewSQSService(sqsConfig)
@@ -57,20 +58,24 @@ func NewServer(logger zerolog.Logger, env types.Env) (Server, error) {
 
 	sqsServer.Logger = logger
 	sqsServer.SQSService = sqsService
-	sqsServer.grpcServer = grpc.NewServer()
-	sqsServer.listener = listener
+	sqsServer.GrpcServer = grpc.NewServer()
+	sqsServer.Listener = listener
 
-	pb.RegisterSQSServiceServer(sqsServer.grpcServer, sqsServer)
+	pb.RegisterSQSServiceServer(sqsServer.GrpcServer, sqsServer)
 
 	return sqsServer, nil
 }
 
 func (s *SQSServer) Serve() error {
-	return s.grpcServer.Serve(s.listener)
+
+	return s.GrpcServer.Serve(s.Listener)
 }
 
 func (s *SQSServer) GracefulStop() {
-	s.grpcServer.GracefulStop()
+	l := s.Logger.With().Str("function", "GracefulStop").Logger()
+	l.Info().Msg("Gracefully shutting down")
+
+	s.GrpcServer.GracefulStop()
 }
 
 func (s *SQSServer) DeleteMessage(ctx context.Context, in *pb.SQSDeleteMessageRequest) (*emptypb.Empty, error) {

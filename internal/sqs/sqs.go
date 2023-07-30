@@ -24,15 +24,17 @@ type SQSService struct {
 func NewSQSService(config *SQSConfig) (*SQSService, error) {
 	l := config.Logger.With().Str("package", packageName).Logger()
 
-	session, err := session.NewSessionWithOptions(session.Options{
-		Profile: config.Profile,
-		Config: aws.Config{
-			Region: aws.String(config.Region),
-		},
+	sqsService := &SQSService{}
+	sqsService.Logger = l
+
+	l = l.With().Str("function", "NewSQSService").Logger()
+
+	session, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.Region),
 	})
 
 	if err != nil {
-		l.Err(err).Msgf("Failed to initialize new session: %v", err)
+		l.Err(err).Msg("Failed to initialize new session")
 
 		return nil, err
 	}
@@ -43,17 +45,15 @@ func NewSQSService(config *SQSConfig) (*SQSService, error) {
 		QueueName: &config.QueueName,
 	})
 	if err != nil {
-		l.Err(err).Msgf("Failed to get queue URL: %v", err)
+		l.Err(err).Msg("Failed to get queue URL")
 		return nil, err
 	}
 
-	return &SQSService{
-		Session:   session,
-		QueueURL:  queueURL.QueueUrl,
-		SQSClient: sqsClient,
-		Logger:    l,
-	}, nil
+	sqsService.Session = session
+	sqsService.QueueURL = queueURL.QueueUrl
+	sqsService.SQSClient = sqsClient
 
+	return sqsService, nil
 }
 
 func (s *SQSService) DeleteSQSMessage(id string) error {

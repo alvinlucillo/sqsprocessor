@@ -4,17 +4,12 @@ import (
 	"os"
 
 	"github.com/alvinlucillo/sqs-processor/internal/client"
-	pb "github.com/alvinlucillo/sqs-processor/protogen/sqs"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	// pb "github.com/alvinlucillo/sqs-processor/protogen/sqs"
 )
 
-type Client struct {
-	pb.SQSServiceClient
-}
-
-var addr string = "0.0.0.0:50051"
-
+// 0.0.0.0:50051
 func main() {
 
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
@@ -24,16 +19,26 @@ func main() {
 	var env client.Environment
 	err := envconfig.Process("myapp", &env)
 	if err != nil {
-		logger.Error().Err(err).Msg("Error env")
-
+		logger.Error().Err(err).Msg("Error initializing env")
 		return
 	}
 
 	logger.Info().Msgf("Env %v", env)
 
+	sqsClient, err := client.NewClient(logger, env)
+	if err != nil {
+		logger.Error().Err(err).Msg("Error initializing client")
+		return
+	}
+
+	if err := sqsClient.Run(); err != nil {
+		logger.Error().Err(err).Msg("Error running client")
+		return
+	}
+
 	// var conn *grpc.ClientConn
 
-	// conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	// if err != nil {
 	// 	log.Fatalf("Failed to connect: %v\n", err)
 	// }

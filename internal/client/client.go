@@ -16,6 +16,7 @@ const (
 )
 
 type Client interface {
+	Run() error
 }
 
 type SQSClient struct {
@@ -31,18 +32,17 @@ type Environment struct {
 }
 
 func NewClient(logger zerolog.Logger, env Environment) (Client, error) {
-	l := logger.With().Str("package", packageName).Logger()
+	logger = logger.With().Str("package", packageName).Logger()
+	l := logger.With().Str("function", "NewClient").Logger()
 
-	l = l.With().Str("function", "NewClient").Logger()
+	sqsClient := &SQSClient{Logger: logger, PollingInterval: env.PollingInterval}
 
-	sqsClient := &SQSClient{Logger: l}
-
-	conn, err := grpc.Dial(fmt.Sprint(env.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	target := fmt.Sprintf("localhost:%v", env.Port)
+	conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		l.Error().Err(err).Msg("Failed to connect")
+		return nil, err
 	}
-
-	defer conn.Close()
 
 	client := pb.NewSQSServiceClient(conn)
 
@@ -59,35 +59,62 @@ func (s *SQSClient) Run() error {
 	ctx := context.Background()
 
 	req := &pb.SQSReceiveMessageRequest{VisibilityTimeout: 5, WaitTime: 5}
-
 	pollCounter := 0
+	errCounter := 0
+	processed := 0
+
+	defer func() {
+		l.Debug().Msgf("Number of processed messages %v", processed)
+		l.Debug().Msgf("Number of polls made %v", pollCounter)
+		l.Debug().Msgf("Number of errors encountered %v", errCounter)
+
+		if err := s.Conn.Close(); err != nil {
+			l.Error().Err(err).Msg("Unable to close connection")
+		}
+	}()
 
 	for {
 		pollCounter++
 
-		l.Info().Msgf("Polling %v time(s)", pollCounter)
+		l.Info().Msgf("Polling count: %v", pollCounter)
 
 		resp, err := s.Client.ReceiveMessage(ctx, req)
 		if err != nil {
 			l.Error().Err(err).Msg("Unable to receive message from sqs")
+			errCounter++
+
+			if errCounter > 10 {
+				goto exit
+			}
 		}
 
 		if resp != nil {
 			l.Info().Msgf("Received %v message(s)", len(resp.Messages))
 
 			for _, msg := range resp.Messages {
+				l.Info().Msgf("Deleting message %v", msg)
+
 				deleteReq := &pb.SQSDeleteMessageRequest{MessageID: msg.MessageID}
 				_, err := s.Client.DeleteMessage(ctx, deleteReq)
 
 				if err != nil {
-					l.Error().Err(err).Msg("Unable to delete ")
-					continue
+					l.Error().Err(err).Msgf("Unable to delete message: %v", msg.MessageID)
+					errCounter++
+
+					if errCounter > 10 {
+						goto exit
+					}
 				}
 
-				l.Info().Msgf("Message id %v deleted successfully", msg.MessageID)
+				l.Info().Msgf("Message deleted successfully: %v", msg.MessageID)
 			}
+		} else {
+			l.Info().Msg("No messages received")
 		}
 
 		time.Sleep(time.Duration(s.PollingInterval) * time.Second)
 	}
+
+exit:
+	return fmt.Errorf("number of errors exceeded limit: %v", errCounter)
 }

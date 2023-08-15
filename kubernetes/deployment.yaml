@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqsserviceapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqsserviceapp
+  template:
+    metadata:
+      name: serverserviceapp-pod
+      labels:
+        app: sqsserviceapp
+    spec:
+      containers:
+        - name: sqsservice
+          image: alvinlucillo/sqsservice
+          imagePullPolicy: Never
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sqsserviceapp-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sqsserviceapp-secret
+                  key: AWS_SECRET_ACCESS_KEY
+        - name: sqsclient
+          image: alvinlucillo/sqsclient
+          imagePullPolicy: Never
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sqsserviceapp-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sqsserviceapp-secret
+                  key: AWS_SECRET_ACCESS_KEY
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqsserviceapp-service
+spec:
+  type: ClusterIP
+  selector:
+    app: server
+  ports:
+    - port: 50051
+      targetPort: 50051

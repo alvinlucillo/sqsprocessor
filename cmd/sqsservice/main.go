@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/alvinlucillo/sqs-processor/internal/server"
+	"github.com/alvinlucillo/sqs-processor/internal/sqsservice"
 	"github.com/alvinlucillo/sqs-processor/internal/types"
 	"github.com/kelseyhightower/envconfig"
 
@@ -26,7 +26,7 @@ func main() {
 
 	logger.Debug().Msgf("Environment variables %v", env)
 
-	s, err := server.NewServer(logger, env)
+	s, err := sqsservice.NewServer(logger, env)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to create server")
 	}

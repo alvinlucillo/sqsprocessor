@@ -1,11 +1,11 @@
 package sqs
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/rs/zerolog"
 )
 
@@ -15,7 +15,7 @@ const (
 
 type SQSService struct {
 	Session   *session.Session
-	SQSClient *sqs.SQS
+	SQSClient sqsiface.SQSAPI
 	QueueURL  *string
 	Logger    zerolog.Logger
 }
@@ -30,20 +30,19 @@ func NewSQSService(config *SQSConfig) (*SQSService, error) {
 	l = l.With().Str("function", "NewSQSService").Logger()
 
 	session, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.Region),
+		Region:      aws.String(config.Region),
+		Credentials: credentials.NewStaticCredentials("key", "secret", "token"),
 	})
 
 	if err != nil {
-		l.Err(err).Msg("Failed to initialize new session")
+		l.Err(err).Msg("Failed to create new session")
 
 		return nil, err
 	}
 
 	sqsClient := sqs.New(session)
 
-	queueURL, err := sqsClient.GetQueueUrl(&sqs.GetQueueUrlInput{
-		QueueName: &config.QueueName,
-	})
+	queueURL, err := getQueueURL(sqsClient, config.QueueName)
 	if err != nil {
 		l.Err(err).Msg("Failed to get queue URL")
 		return nil, err
@@ -54,6 +53,14 @@ func NewSQSService(config *SQSConfig) (*SQSService, error) {
 	sqsService.SQSClient = sqsClient
 
 	return sqsService, nil
+}
+
+func getQueueURL(sqsClient sqsiface.SQSAPI, queueName string) (*sqs.GetQueueUrlOutput, error) {
+	queueURL, err := sqsClient.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: &queueName,
+	})
+
+	return queueURL, err
 }
 
 func (s *SQSService) DeleteSQSMessage(id string) error {
@@ -77,7 +84,7 @@ func (s *SQSService) GetSQSMessage(sqsConfig *SQSReceiveMsgConfig) (*SQSResult, 
 		WaitTimeSeconds:     aws.Int64(sqsConfig.WaitingTime),
 	}
 
-	result, err := s.pollForMsgs(s.Session, input)
+	result, err := s.pollMessages(s.Session, input)
 	if err != nil {
 		l.Err(err).Msgf("Failed to poll for messages")
 		return nil, err
@@ -88,15 +95,14 @@ func (s *SQSService) GetSQSMessage(sqsConfig *SQSReceiveMsgConfig) (*SQSResult, 
 	if len(result) > 0 {
 		for _, msg := range result {
 			messages = append(messages, SQSResultMessage{ID: *msg.ReceiptHandle, Body: *msg.Body})
-			fmt.Println(*msg.ReceiptHandle)
 		}
 	}
 
 	return &SQSResult{Messages: messages}, nil
 }
 
-func (s *SQSService) pollForMsgs(sess *session.Session, sqsMessageInput *sqs.ReceiveMessageInput) ([]*sqs.Message, error) {
-	l := s.Logger.With().Str("function", "pollForMsgs").Logger()
+func (s *SQSService) pollMessages(sess *session.Session, sqsMessageInput *sqs.ReceiveMessageInput) ([]*sqs.Message, error) {
+	l := s.Logger.With().Str("function", "pollMessages").Logger()
 
 	msgResult, err := s.SQSClient.ReceiveMessage(sqsMessageInput)
 

@@ -1,4 +1,4 @@
-package server
+package sqsservice
 
 import (
 	"context"
@@ -32,7 +32,7 @@ type SQSServer struct {
 	Listener   net.Listener
 }
 
-func NewServer(logger zerolog.Logger, env types.Env) (Server, error) {
+func NewServer(logger zerolog.Logger, env types.ServerEnvironment) (Server, error) {
 	l := logger.With().Str("package", packageName).Logger()
 
 	sqsServer := &SQSServer{}

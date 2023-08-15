@@ -6,6 +6,7 @@ import (
 	"time"
 
 	pb "github.com/alvinlucillo/sqs-processor/protogen/sqs"
+
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

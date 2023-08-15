@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	logger.Info().Caller().Msg("Client starting")

@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"github.com/alvinlucillo/sqs-processor/internal/sqs"
-	"github.com/alvinlucillo/sqs-processor/internal/types"
 	pb "github.com/alvinlucillo/sqs-processor/protogen/sqs"
 
 	"github.com/rs/zerolog"
@@ -32,7 +31,14 @@ type SQSServer struct {
 	Listener   net.Listener
 }
 
-func NewServer(logger zerolog.Logger, env types.ServerEnvironment) (Server, error) {
+type Environment struct {
+	Region    string `required:"true" default:"us-east-1"`
+	QueueName string `required:"true" default:"sqs-sample-1"`
+	Profile   string `required:"true" default:"default"`
+	Port      int    `required:"true" default:"50051"`
+}
+
+func NewServer(logger zerolog.Logger, env Environment) (Server, error) {
 	l := logger.With().Str("package", packageName).Logger()
 
 	sqsServer := &SQSServer{}

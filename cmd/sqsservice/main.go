@@ -6,7 +6,6 @@ import (
 	"syscall"
 
 	"github.com/alvinlucillo/sqs-processor/internal/sqsservice"
-	"github.com/alvinlucillo/sqs-processor/internal/types"
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/rs/zerolog"
@@ -17,7 +16,7 @@ func main() {
 
 	logger.Info().Caller().Msg("Server starting")
 
-	var env types.ServerEnvironment
+	var env sqsservice.Environment
 	err := envconfig.Process("myapp", &env)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error initializing env")

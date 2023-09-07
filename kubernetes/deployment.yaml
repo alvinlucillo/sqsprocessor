@@ -16,7 +16,7 @@ spec:
       containers:
         - name: sqsservice
           image: alvinlucillo/sqsservice
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -30,7 +30,7 @@ spec:
                   key: AWS_SECRET_ACCESS_KEY
         - name: sqsclient
           image: alvinlucillo/sqsclient
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:

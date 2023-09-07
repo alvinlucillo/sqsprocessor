@@ -2,7 +2,6 @@ package sqs
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
@@ -30,8 +29,7 @@ func NewSQSService(config *SQSConfig) (*SQSService, error) {
 	l = l.With().Str("function", "NewSQSService").Logger()
 
 	session, err := session.NewSession(&aws.Config{
-		Region:      aws.String(config.Region),
-		Credentials: credentials.NewStaticCredentials("key", "secret", "token"),
+		Region: aws.String(config.Region),
 	})
 
 	if err != nil {

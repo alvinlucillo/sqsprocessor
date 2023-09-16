@@ -8,19 +8,23 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// main is the entrypoint to run the client app
 func main() {
+	// initializes logger to log to standard output
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	logger.Info().Caller().Msg("Client starting")
 
+	// initializes struct with values from env vars
+	// errors out if required vars are missing
 	var env client.Environment
-	err := envconfig.Process("myapp", &env)
+	err := envconfig.Process("", &env)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error initializing env")
 		return
 	}
 
-	logger.Info().Msgf("Env %v", env)
+	// logger.Info().Msgf("Env %v", env)
 
 	sqsClient, err := client.NewClient(logger, env)
 	if err != nil {

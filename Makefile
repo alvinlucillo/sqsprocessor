@@ -34,17 +34,17 @@ load-sqsservice-image:
 list-images:
 	minikube image ls --format table
 
-# create k8s local cluster
-create-cluster:
+# deploy to k8s local cluster
+deploy-local:
 	kubectl apply -f ./kubernetes/.
 
-# delete k8s local cluster
-delete-cluster:
+# delete resources from k8s local cluster
+delete-local:
 	kubectl delete -f ./kubernetes/.
 
 # create secret
 create-secret:
-	kubectl create secret generic sqsserviceapp-secret --from-literal=AWS_ACCESS_KEY_ID=$(APP_AWS_ACCESS_KEY_ID) --from-literal=AWS_SECRET_ACCESS_KEY=$(APP_AWS_SECRET_ACCESS_KEY)
+	kubectl create secret generic sqsserviceapp-secret --from-literal=APP_AWS_ACCESS_KEY_ID=$(APP_AWS_ACCESS_KEY_ID) --from-literal=APP_AWS_SECRET_ACCESS_KEY=$(APP_AWS_SECRET_ACCESS_KEY)
 
 # delete secret
 delete-secret:

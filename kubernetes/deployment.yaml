@@ -18,30 +18,30 @@ spec:
           image: alvinlucillo/sqsservice
           imagePullPolicy: Always
           env:
-            - name: AWS_ACCESS_KEY_ID
+            - name: APP_AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: sqsserviceapp-secret
-                  key: AWS_ACCESS_KEY_ID
-            - name: AWS_SECRET_ACCESS_KEY
+                  key: APP_AWS_ACCESS_KEY_ID
+            - name: APP_AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: sqsserviceapp-secret
-                  key: AWS_SECRET_ACCESS_KEY
+                  key: APP_AWS_SECRET_ACCESS_KEY
         - name: sqsclient
           image: alvinlucillo/sqsclient
           imagePullPolicy: Always
           env:
-            - name: AWS_ACCESS_KEY_ID
+            - name: APP_AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: sqsserviceapp-secret
-                  key: AWS_ACCESS_KEY_ID
-            - name: AWS_SECRET_ACCESS_KEY
+                  key: APP_AWS_ACCESS_KEY_ID
+            - name: APP_AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: sqsserviceapp-secret
-                  key: AWS_SECRET_ACCESS_KEY
+                  key: APP_AWS_SECRET_ACCESS_KEY
 
 ---
 apiVersion: v1

@@ -61,3 +61,7 @@ apply:
 refresh:                        			                    
 	terraform refresh \
 		$(TF_CONFIG) \
+
+# Destroys all created files
+destroy-auto:    									                                          
+	terraform destroy -auto-approve $(TF_CONFIG)

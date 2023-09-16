@@ -1,5 +1,8 @@
 package sqs
 
+// package is used for unit test
+// mocks aws sdk's sqs functions for testing purposes
+
 import (
 	"errors"
 
@@ -8,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 )
 
+// default values
 const (
 	SqsQueueName         = "queue-1"
 	SqsErrQueueName      = "err-queue"
@@ -24,10 +28,10 @@ const (
 
 type SqsMock struct {
 	sqsiface.SQSAPI
-	sendMessageOutput   *sqs.SendMessageOutput
 	deleteMessageOutput *sqs.DeleteMessageOutput
 }
 
+// DeleteMessage -- mocks sqs DeleteMessage
 func (s SqsMock) DeleteMessage(in *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
 
 	if *in.ReceiptHandle == ErrMessageId {
@@ -37,6 +41,7 @@ func (s SqsMock) DeleteMessage(in *sqs.DeleteMessageInput) (*sqs.DeleteMessageOu
 	return s.deleteMessageOutput, nil
 }
 
+// GetQueueUrl -- mocks sqs GetQueueUrl
 func (s SqsMock) GetQueueUrl(in *sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
 
 	if *in.QueueName == SqsErrQueueName {
@@ -49,14 +54,7 @@ func (s SqsMock) GetQueueUrl(in *sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, 
 	}, nil
 }
 
-// func (s SqsMock) SendMessage(in *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
-// 	if *in.QueueUrl == sqsQueueUrlPrefix+sqsErrQueueName {
-// 		return s.sendMessageOutput, errors.New(errMessageFailedSend)
-// 	}
-
-// 	return s.sendMessageOutput, nil
-// }
-
+// ReceiveMessage -- mocks sqs ReceiveMessage
 func (s SqsMock) ReceiveMessage(in *sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
 	if *in.QueueUrl == SqsQueueUrlPrefix+SqsErrQueueName {
 		return nil, errors.New(ErrMessageFailedReceive)

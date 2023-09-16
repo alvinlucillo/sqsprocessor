@@ -32,10 +32,12 @@ type SQSServer struct {
 }
 
 type Environment struct {
-	Region    string `required:"true" default:"us-east-1"`
-	QueueName string `required:"true" default:"sqs-sample-1"`
-	Profile   string `required:"true" default:"default"`
-	Port      int    `required:"true" default:"50051"`
+	Region             string `required:"true" default:"us-east-1"`
+	QueueName          string `required:"true" default:"sqs-sample-1"`
+	Profile            string `required:"true" default:"default"`
+	Port               int    `required:"true" default:"50051"`
+	AwsAccessKeyId     string `required:"true" split_words:"true"`
+	AwsSecretAccessKey string `required:"true" split_words:"true"`
 }
 
 func NewServer(logger zerolog.Logger, env Environment) (Server, error) {
@@ -44,10 +46,12 @@ func NewServer(logger zerolog.Logger, env Environment) (Server, error) {
 	sqsServer := &SQSServer{}
 
 	sqsConfig := &sqs.SQSConfig{
-		QueueName: env.QueueName,
-		Profile:   env.Profile,
-		Region:    env.Region,
-		Logger:    logger,
+		QueueName:          env.QueueName,
+		Profile:            env.Profile,
+		Region:             env.Region,
+		Logger:             logger,
+		AwsAccessKeyId:     env.AwsAccessKeyId,
+		AwsSecretAccessKey: env.AwsSecretAccessKey,
 	}
 
 	sqsService, err := sqs.NewSQSService(sqsConfig)
@@ -100,7 +104,7 @@ func (s *SQSServer) ReceiveMessage(ctx context.Context, in *pb.SQSReceiveMessage
 	sqsConfig := &sqs.SQSReceiveMsgConfig{
 		VisibilityTimeout: in.VisibilityTimeout,
 		WaitingTime:       in.WaitTime,
-		MaximumMessages:   5,
+		MaximumMessages:   in.MaximumNumberOfMessages,
 	}
 
 	messages, err := s.SQSService.GetSQSMessage(sqsConfig)

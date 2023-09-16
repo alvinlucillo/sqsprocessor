@@ -18,8 +18,10 @@ type SQSResult struct {
 }
 
 type SQSConfig struct {
-	QueueName string
-	Profile   string
-	Logger    zerolog.Logger
-	Region    string
+	QueueName          string
+	Profile            string
+	Logger             zerolog.Logger
+	Region             string
+	AwsAccessKeyId     string
+	AwsSecretAccessKey string
 }

@@ -88,6 +88,7 @@ func (s *SQSServer) GracefulStop() {
 	s.GrpcServer.GracefulStop()
 }
 
+// DeleteMessage - deletes an sqs message
 func (s *SQSServer) DeleteMessage(ctx context.Context, in *pb.SQSDeleteMessageRequest) (*emptypb.Empty, error) {
 	l := s.Logger.With().Str("function", "DeleteMessage").Logger()
 
@@ -96,6 +97,7 @@ func (s *SQSServer) DeleteMessage(ctx context.Context, in *pb.SQSDeleteMessageRe
 	return &emptypb.Empty{}, s.SQSService.DeleteSQSMessage(in.MessageID)
 }
 
+// DeleteMessage - retrieves sqs messages
 func (s *SQSServer) ReceiveMessage(ctx context.Context, in *pb.SQSReceiveMessageRequest) (*pb.SQSReceiveMessageResponse, error) {
 	l := s.Logger.With().Str("function", "ReceiveMessage").Logger()
 

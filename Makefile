@@ -9,6 +9,7 @@ genproto:
 clean:
 	rm -rf protogen/*
 
+# builds all images
 build-all:
 	docker build -f ./docker/sqs_service.Dockerfile . -t alvinlucillo/sqsservice
 	docker build -f ./docker/sqs_client.Dockerfile . -t alvinlucillo/sqsclient
@@ -17,7 +18,7 @@ build-all:
 build-sqsservice:
 	docker build -f ./docker/sqs_service.Dockerfile . -t alvinlucillo/sqsservice
 
-# creates Docker image for the sqsservice
+# creates Docker image for the sqsclient
 build-client:
 	docker build -f ./docker/sqs_client.Dockerfile . -t alvinlucillo/sqsclient
 

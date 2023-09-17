@@ -14,13 +14,13 @@ SQS Processor demonstrates the sidecar pattern, which is used to decouple proces
 
 In the diagram below, there are two containers:
 
-- sqsclient
+- `sqsclient`
   - consumes the services provided by the sqsservice container
   - business logic resides here to process SQS messages
-- sqsservice
+- `sqsservice`
   - the sidecar container provides endpoints to consume and delete SQS messages
 
-In summary, sqsclient periodically looks for any messages from the queue via the endpoint exposed by sidecar container, sqsservice. The received messages are then deleted by sqsclient via another endpoint from sqsservice.
+In summary, `sqsclient` periodically looks for any messages from the queue via the endpoint exposed by sidecar container, sqsservice. The received messages are then deleted by `sqsclient` via another endpoint from sqsservice.
 
 The diagram shows the system is deployed into a Kubernetes cluster using AWS services, but this project can also be tested in local cluster using minikube.
 
@@ -141,7 +141,7 @@ These are the optional steps if you want to take it a step further:
 ## The process in action! 💪
 1. Stream the logs for the two containers:
     - sqsservice: `kubectl logs pod/pod_name -c sqsservice -f`
-    - sqsclient:: `kubectl logs pod/pod_name -c sqsclient -f`
+    - sqsclient: `kubectl logs pod/pod_name -c sqsclient -f`
 2. While there's no message in the queue, you'll see the following
     - sqsclient - this is configured to continuously poll for messages from sqsservice
         ```
@@ -166,8 +166,6 @@ These are the optional steps if you want to take it a step further:
 5. SQSClient will receive the message from the SQSService then delete it
    ```
     {"level":"info","package":"client","function":"Run","time":"2023-09-17T10:15:14Z","message":"Received 1 message(s)"}
-
     {"level":"info","package":"client","function":"Run","time":"2023-09-17T10:15:14Z","message":"Deleting message messageID:\"AQEBo4QCIVXuMaMZew==\" messageBody:\"hello\""}
-
     {"level":"info","package":"client","function":"Run","time":"2023-09-17T10:15:14Z","message":"Message deleted successfully: AQEBo4QCIVXuMaMZew==\"}
    ```
